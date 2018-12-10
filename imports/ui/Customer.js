@@ -4,6 +4,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import DoneIcon from '@material-ui/icons/Done';
 import NotDoneIcon from '@material-ui/icons/Clear';
+import Fab from '@material-ui/core/Fab';
 
 const styles = {
   li: {
@@ -62,13 +63,19 @@ export default class Customer extends Component {
           <span style={styles.email}>{this.props.customer.email}</span>
           <span style={styles.age}>{this.props.customer.age}</span>
           {this.props.customer.status ? <DoneIcon style={styles.statusIcon}/> : <NotDoneIcon style={styles.statusIcon}/>}
-          <Avatar style={{marginLeft: 25, backgroundColor: '#4B9A82', ...styles.buttons}} component={'button'}>
-            <EditIcon />
-          </Avatar>
-          <Avatar style={{marginLeft: 5, backgroundColor: '#ED706A', ...styles.buttons}} component={'button'}
-                  onClick={() => this.props.removeCustomer(this.props.customer._id) }>
-            <DeleteIcon />
-          </Avatar>
+          <Fab size={'small'}
+               style={{marginLeft: 25, backgroundColor: '#4B9A82', ...styles.buttons}}
+               disabled={!this.props.currentUser}
+          >
+            <EditIcon style={{color: 'fff'}}/>
+          </Fab>
+          <Fab size={'small'}
+               style={{marginLeft: 5, backgroundColor: '#ED706A', ...styles.buttons}}
+               disabled={!this.props.currentUser}
+               onClick={() => this.props.removeCustomer(this.props.customer._id) }
+          >
+            <DeleteIcon style={{color: 'fff'}}/>
+          </Fab>
         </div>
       </li>
     )
