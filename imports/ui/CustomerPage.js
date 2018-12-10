@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import AddIcon from '@material-ui/icons/Add';
+import SearchIcon from '@material-ui/icons/Search';
 import Dialog from '@material-ui/core/Dialog';
 import Fab from '@material-ui/core/Fab';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -30,7 +31,11 @@ const styles = {
     marginRight: 20,
     background: 'pink'
   },
-  addIcon: {
+  searchButton: {
+    marginRight: 5,
+    background: '#D1BA78'
+  },
+  icon: {
     color: 'fff'
   },
   addInput: {
@@ -59,7 +64,10 @@ class CustomerPage extends Component {
       addEmail: '',
       addFirstName: '',
       addLastName: '',
-      addAge: ''
+      addAge: '',
+      firstName: '',
+      lastName: '',
+      email: ''
     };
   }
 
@@ -73,15 +81,13 @@ class CustomerPage extends Component {
 
   handleAddClose = () => {
     if (this.state.addEmail && this.state.addFirstName && this.state.addLastName && this.state.addAge) {
-      Customers.insert({
+      let customer = {
         firstName: this.state.addFirstName,
         lastName: this.state.addLastName,
         email: this.state.addEmail,
         age: this.state.addAge,
-        status: false,
-        addedAt: new Date()
-      });
-
+      };
+      Meteor.call('customers.insert', customer);
       this.setState({
         open: false,
         addEmail: '',
@@ -91,11 +97,28 @@ class CustomerPage extends Component {
     }
   };
 
-  removeCustomer = id => {
-    Customers.remove(id);
+  changeStatus = (id, bool) => {
+    Meteor.call('customers.setStatus', id, bool);
   };
 
-  handleAddInputChange = (event) => {
+  removeCustomer = id => {
+    Meteor.call('customers.remove', id);
+  };
+  handleSearch = () => {
+    let data = {};
+    if (this.state.firstName) data.firstName = this.state.firstName;
+    if (this.state.lastName) data.lastName = this.state.lastName;
+    if (this.state.email) data.email = this.state.email;
+    let a = Customers.find({
+      $or: [
+        { firstName: data.firstName },
+        { lastName: data.lastName },
+        { email: data.email },
+      ],
+    }).fetch();
+    console.log(a);
+  };
+  handleInputChange = (event) => {
     this.setState({[event.target.id]: event.target.value})
   };
 
@@ -105,11 +128,17 @@ class CustomerPage extends Component {
         <h1 style={{marginLeft: 10}}>Customers</h1>
         <div style={styles.buttons}>
           <Fab size={'small'}
+               style={styles.searchButton}
+               onClick={this.handleSearch}
+          >
+            <SearchIcon style={styles.icon}/>
+          </Fab>
+          <Fab size={'small'}
                style={styles.addButton}
                disabled={!this.props.currentUser}
                onClick={this.handleClickOpen}
           >
-            <AddIcon style={styles.addIcon}/>
+            <AddIcon style={styles.icon}/>
           </Fab>
           <Dialog
             open={this.state.open}
@@ -119,25 +148,25 @@ class CustomerPage extends Component {
             <DialogTitle>Add new customer</DialogTitle>
             <input value={this.state.addFirstName}
                    id={'addFirstName'}
-                   onChange={this.handleAddInputChange}
+                   onChange={this.handleInputChange}
                    placeholder={"First name"}
                    style={styles.addInput}
             />
             <input value={this.state.addLastName}
                    id={'addLastName'}
-                   onChange={this.handleAddInputChange}
+                   onChange={this.handleInputChange}
                    placeholder={"Last name"}
                    style={styles.addInput}
             />
             <input value={this.state.addEmail}
                    id={'addEmail'}
-                   onChange={this.handleAddInputChange}
+                   onChange={this.handleInputChange}
                    placeholder={"Email"}
                    style={styles.addInput}
             />
             <input value={this.state.addAge}
                    id={'addAge'}
-                   onChange={this.handleAddInputChange}
+                   onChange={this.handleInputChange}
                    placeholder={"Age"}
                    style={styles.addInput}
             />
@@ -159,13 +188,29 @@ class CustomerPage extends Component {
           <span style={{marginLeft: 50}}>Status</span>
         </div>
         <div style={{marginTop: 5}}>
-          <input style={{...styles.searchInput, marginLeft: 100}}/>
-          <input style={styles.searchInput}/>
-          <input style={styles.searchInput}/>
+          <input
+            style={{...styles.searchInput, marginLeft: 100}}
+            value={this.state.firstName}
+            id={'firstName'}
+            onChange={this.handleInputChange}
+          />
+          <input
+            style={styles.searchInput}
+            value={this.state.lastName}
+            id={'lastName'}
+            onChange={this.handleInputChange}
+          />
+          <input
+            style={styles.searchInput}
+            value={this.state.email}
+            id={'email'}
+            onChange={this.handleInputChange}
+          />
           <button
             type="button"
             className="btn btn-secondary"
             style={{marginLeft: 230}}
+            onClick={() => this.setState({firstName: '', lastName: '', email: ''})}
           >
             Reset
           </button>
@@ -176,7 +221,9 @@ class CustomerPage extends Component {
               currentUser={this.props.currentUser}
               key={index}
               customer={customer}
-              removeCustomer={this.removeCustomer}/>
+              removeCustomer={this.removeCustomer}
+              changeStatus={this.changeStatus}
+            />
           })}
         </ul>
       </div>
@@ -184,6 +231,7 @@ class CustomerPage extends Component {
   }
 }
 export default withTracker(() => {
+  Meteor.subscribe('customers');
   return {
     customers: Customers.find({}, { sort: { addedAt: -1 } }).fetch(),
     currentUser: Meteor.user(),

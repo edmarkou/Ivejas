@@ -62,7 +62,14 @@ export default class Customer extends Component {
           <span style={styles.lastName}>{this.props.customer.lastName}</span>
           <span style={styles.email}>{this.props.customer.email}</span>
           <span style={styles.age}>{this.props.customer.age}</span>
-          {this.props.customer.status ? <DoneIcon style={styles.statusIcon}/> : <NotDoneIcon style={styles.statusIcon}/>}
+          {this.props.customer.status ?
+            <DoneIcon onClick={() => this.props.changeStatus(this.props.customer._id, false)}
+                      style={styles.statusIcon}
+            />
+            :
+            <NotDoneIcon onClick={() => this.props.changeStatus(this.props.customer._id, true)}
+                         style={styles.statusIcon}
+            />}
           <Fab size={'small'}
                style={{marginLeft: 25, backgroundColor: '#4B9A82', ...styles.buttons}}
                disabled={!this.props.currentUser}
